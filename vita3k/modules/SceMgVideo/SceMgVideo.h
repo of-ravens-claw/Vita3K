@@ -15,36 +15,10 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-#include "SceErrorUser.h"
+#pragma once
 
-EXPORT(int, sceErrorGetExternalString, char *result, int err) {
-    sprintf(result, "0x%08X", err);
-    return 0;
-}
+#include <module/module.h>
 
-EXPORT(int, sceErrorHistoryClearError) {
-    return UNIMPLEMENTED();
-}
-
-EXPORT(int, sceErrorHistoryGetError) {
-    return UNIMPLEMENTED();
-}
-
-EXPORT(int, sceErrorHistoryPostError) {
-    return UNIMPLEMENTED();
-}
-
-EXPORT(int, sceErrorHistorySetDefaultFormat) {
-    return UNIMPLEMENTED();
-}
-
-EXPORT(int, sceErrorHistoryUpdateSequenceInfo) {
-    return UNIMPLEMENTED();
-}
-
-BRIDGE_IMPL(sceErrorGetExternalString)
-BRIDGE_IMPL(sceErrorHistoryClearError)
-BRIDGE_IMPL(sceErrorHistoryGetError)
-BRIDGE_IMPL(sceErrorHistoryPostError)
-BRIDGE_IMPL(sceErrorHistorySetDefaultFormat)
-BRIDGE_IMPL(sceErrorHistoryUpdateSequenceInfo)
+BRIDGE_DECL(SceMgVideo_D6EE7B53)
+BRIDGE_DECL(SceMgVideo_18D553EB)
+BRIDGE_DECL(SceMgVideo_C62CA5A7)

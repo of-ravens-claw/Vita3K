@@ -41,7 +41,7 @@ void browse_live_area_apps_list(GuiState &gui, EmuEnvState &emuenv, const uint32
 void browse_pages_manual(GuiState &gui, EmuEnvState &emuenv, const uint32_t button);
 void browse_save_data_dialog(GuiState &gui, EmuEnvState &emuenv, const uint32_t button);
 void browse_users_management(GuiState &gui, EmuEnvState &emuenv, const uint32_t button);
-void close_and_run_new_app(GuiState &gui, EmuEnvState &emuenv, const std::string &app_path);
+void close_and_run_new_app(EmuEnvState &emuenv, const std::string &app_path);
 void close_live_area_app(GuiState &gui, EmuEnvState &emuenv, const std::string &app_path);
 void close_system_app(GuiState &gui, EmuEnvState &emuenv);
 void delete_app(GuiState &gui, EmuEnvState &emuenv, const std::string &app_path);
@@ -60,6 +60,7 @@ void get_notice_list(EmuEnvState &emuenv);
 std::string get_theme_title_from_buffer(const vfs::FileBuffer &buffer);
 std::vector<TimeApp>::iterator get_time_app_index(GuiState &gui, EmuEnvState &emuenv, const std::string &app);
 void get_time_apps(GuiState &gui, EmuEnvState &emuenv);
+std::vector<App>::iterator get_user_app_index(GuiState &gui, const std::string &app_path);
 void get_user_apps_title(GuiState &gui, EmuEnvState &emuenv);
 void get_users_list(GuiState &gui, EmuEnvState &emuenv);
 bool get_sys_apps_state(GuiState &gui);

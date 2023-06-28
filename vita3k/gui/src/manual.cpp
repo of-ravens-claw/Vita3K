@@ -22,6 +22,7 @@
 #include <gui/functions.h>
 
 #include <config/state.h>
+#include <io/functions.h>
 #include <io/vfs.h>
 
 #include <util/log.h>
@@ -82,7 +83,7 @@ bool init_manual(GuiState &gui, EmuEnvState &emuenv, const std::string &app_path
     height_manual_pages.clear();
 
     const auto APP_INDEX = get_app_index(gui, app_path);
-    const auto APP_PATH{ fs::path(emuenv.pref_path) / "ux0/app" / app_path };
+    const auto APP_PATH{ fs::path(emuenv.pref_path) / convert_path(app_path) };
     auto manual_path{ fs::path("sce_sys/manual/") };
 
     const auto lang = fmt::format("{:0>2d}", emuenv.cfg.sys_lang);
@@ -94,7 +95,6 @@ bool init_manual(GuiState &gui, EmuEnvState &emuenv, const std::string &app_path
         for (const auto &manual : fs::directory_iterator(APP_PATH / manual_path)) {
             if (manual.path().extension() == ".png") {
                 const auto page_path = manual_path / manual.path().filename().string();
-
                 vfs::FileBuffer buffer;
                 vfs::read_app_file(buffer, emuenv.pref_path, app_path, page_path);
 

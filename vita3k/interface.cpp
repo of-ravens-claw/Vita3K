@@ -236,7 +236,7 @@ bool install_archive_content(EmuEnvState &emuenv, GuiState *gui, const fs::path 
     if (!gui->file_menu.archive_install_dialog && (emuenv.app_info.app_category != "theme")) {
         gui::update_notice_info(*gui, emuenv, "content");
         if ((emuenv.app_info.app_category.find("gd") != std::string::npos) || (emuenv.app_info.app_category.find("gp") != std::string::npos)) {
-            gui::init_user_app(*gui, emuenv, emuenv.app_info.app_title_id);
+            gui::init_user_app(*gui, emuenv, "ux0:app/" + emuenv.app_info.app_title_id);
             gui::save_apps_cache(*gui, emuenv);
         }
     }
@@ -386,7 +386,7 @@ static bool install_content(EmuEnvState &emuenv, GuiState *gui, const fs::path &
     LOG_INFO("{} [{}] installed succesfully!", emuenv.app_info.app_title, emuenv.app_info.app_title_id);
 
     if ((emuenv.app_info.app_category.find("gd") != std::string::npos) || (emuenv.app_info.app_category.find("gp") != std::string::npos)) {
-        gui::init_user_app(*gui, emuenv, emuenv.app_info.app_title_id);
+        gui::init_user_app(*gui, emuenv, "ux0:app/" + emuenv.app_info.app_title_id);
         gui::save_apps_cache(*gui, emuenv);
     }
 
@@ -470,8 +470,12 @@ static ExitCode load_app_impl(SceUID &main_module_id, EmuEnvState &emuenv, const
     }
 
     // Load main executable
-    emuenv.self_path = !emuenv.cfg.self_path.empty() ? emuenv.cfg.self_path : EBOOT_PATH;
-    main_module_id = load_module(emuenv, "app0:" + emuenv.self_path);
+    if (emuenv.io.app_path == "vs0:vsh/shell") {
+        emuenv.self_path = emuenv.io.app_path + "/shell.self";
+    } else
+        emuenv.self_path = !emuenv.cfg.self_path.empty() ? emuenv.cfg.app_device + ":" + emuenv.cfg.self_path : (fs::path(emuenv.io.app_path) / EBOOT_PATH).string();
+
+    main_module_id = load_module(emuenv, emuenv.self_path);
     if (main_module_id >= 0) {
         const auto module = emuenv.kernel.loaded_modules[main_module_id];
         LOG_INFO("Main executable {} ({}) loaded", module->module_name, emuenv.self_path);
@@ -489,7 +493,7 @@ static ExitCode load_app_impl(SceUID &main_module_id, EmuEnvState &emuenv, const
             process_preload_disabled = *preload_disabled_ptr.get(emuenv.mem);
         }
     }
-    const auto module_app_path{ fs::path(emuenv.pref_path) / "ux0/app" / emuenv.io.app_path / "sce_module" };
+    const auto module_app_path{ fs::path(emuenv.pref_path) / convert_path(emuenv.io.app_path) / "sce_module" };
     const auto is_app = fs::exists(module_app_path) && !fs::is_empty(module_app_path);
     std::vector<std::string> lib_load_list = {};
     // todo: check if module is imported
@@ -497,8 +501,9 @@ static ExitCode load_app_impl(SceUID &main_module_id, EmuEnvState &emuenv, const
         if ((process_preload_disabled & code) == 0) {
             if (is_lle_module(name, emuenv)) {
                 if (load_from_app)
-                    lib_load_list.emplace_back(fmt::format("app0:sce_module/{}.suprx", name));
+                    lib_load_list.emplace_back(fmt::format("{}/sce_module/{}.suprx", emuenv.io.app_path, name));
                 else
+
                     lib_load_list.emplace_back(fmt::format("vs0:sys/external/{}.suprx", name));
             }
 
@@ -572,7 +577,7 @@ bool handle_events(EmuEnvState &emuenv, GuiState &gui) {
         };
         const auto confirm = [&]() {
             const auto app_path = gui.vita_area.live_area_screen ? gui.live_area_current_open_apps_list[gui.live_area_app_current_open] : emuenv.app_path;
-            gui::close_and_run_new_app(gui, emuenv, app_path);
+            gui::close_and_run_new_app(emuenv, app_path);
         };
         switch (button) {
         case SCE_CTRL_CIRCLE:
@@ -876,7 +881,7 @@ ExitCode run_app(EmuEnvState &emuenv, int32_t main_module_id) {
         param.size = SceSize(buf.size());
         param.attr = arr.address();
     }
-    if (main_thread->start(param.size, Ptr<void>(param.attr), true) < 0) {
+    if (main_thread->start(param.size, Ptr<void>(param.attr)) < 0) {
         app::error_dialog("Failed to run main thread.", emuenv.window.get());
         return RunThreadFailed;
     }

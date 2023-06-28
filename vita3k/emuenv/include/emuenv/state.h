@@ -114,6 +114,7 @@ public:
     std::string default_path{};
     std::wstring pref_path{};
     bool load_exec{};
+    std::string load_app_device{};
     std::string load_app_path{};
     std::string load_exec_argv{};
     std::string load_exec_path{};
