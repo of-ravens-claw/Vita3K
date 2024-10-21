@@ -698,6 +698,13 @@ SceUID load_self(KernelState &kernel, MemState &mem, const void *self, const std
     kernelModuleInfo->info_segment_address = module_info_segment_address;
     kernelModuleInfo->info_offset = module_info_offset;
 
+    // for taiHEN
+    kernelModuleInfo->module_nid    = module_info->module_nid;
+    kernelModuleInfo->exports_start = (module_info_segment_address + module_info->export_top).address();
+    kernelModuleInfo->exports_end   = (module_info_segment_address + module_info->export_end).address();
+    kernelModuleInfo->imports_start = (module_info_segment_address + module_info->import_top).address();
+    kernelModuleInfo->imports_end   = (module_info_segment_address + module_info->import_end).address();
+
     auto *sceKernelModuleInfo = &kernelModuleInfo->info;
     sceKernelModuleInfo->size = sizeof(*sceKernelModuleInfo);
     strncpy(sceKernelModuleInfo->module_name, module_info->name, 28);

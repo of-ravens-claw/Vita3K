@@ -45,6 +45,13 @@ struct KernelModule {
     SceKernelModuleInfo info;
     Ptr<const uint8_t> info_segment_address;
     uint32_t info_offset;
+
+    // extra data needed for taiHEN
+    uint32_t module_nid;
+    Address exports_start;
+    Address exports_end;
+    Address imports_start;
+    Address imports_end;
 };
 typedef std::shared_ptr<KernelModule> SceKernelModulePtr;
 

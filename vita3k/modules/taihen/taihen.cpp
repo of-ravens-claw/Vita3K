@@ -125,14 +125,18 @@ SceUID get_module_uid_by_name(EmuEnvState& emuenv, const char* module_name)
     return TAI_ERROR_INVALID_MODULE;
 }
 
-SceKernelModuleInfo *get_sce_module_info_from_uid(EmuEnvState& emuenv, SceUID modid)
+SceKernelModulePtr get_v3k_module_info_from_uid(EmuEnvState &emuenv, SceUID modid)
 {
-    for (auto [module_id, module] : emuenv.kernel.loaded_modules) 
-    {
-        if (module_id == modid)
-            return &module->info;
-    }
-    return nullptr;
+    auto module = emuenv.kernel.loaded_modules.find(modid);
+    if (module == emuenv.kernel.loaded_modules.end())
+        return nullptr;
+
+    return module->second;
+}
+
+SceKernelModuleInfo *get_sce_module_info_from_uid(EmuEnvState &emuenv, SceUID modid)
+{
+    return &get_v3k_module_info_from_uid(emuenv, modid)->info;
 }
 
 EXPORT(SceUID, taiHookFunctionExportForUser, /*out*/ tai_hook_ref_t *p_hook, /*in*/ tai_hook_args_t *args)
@@ -170,19 +174,17 @@ EXPORT(int, taiGetModuleInfo, const char *module_name, /*in*/ tai_module_info_t 
     else
         modid = get_module_uid_by_name(emuenv, module_name);
 
-    auto &mod_info = *get_sce_module_info_from_uid(emuenv, modid);
+    auto &mod_info = *get_v3k_module_info_from_uid(emuenv, modid);
 
-    // we need to add stuff to the v3k kernel impl.
-    info->modid = modid;
-    info->module_nid = 0xEE10DD7A;
-    strncpy(info->name, mod_info.module_name, 27);
-    info->name[26] = '\0';
-    info->exports_start = 0;
-    info->exports_end = 0;
-    info->imports_start = 0;
-    info->imports_end = 0;
+    strncpy(info->name, mod_info.info.module_name, 27);
+    info->modid         = modid;
+    info->module_nid    = mod_info.module_nid;
+    info->name[26]      = '\0';
+    info->exports_start = mod_info.exports_start;
+    info->exports_end   = mod_info.exports_end;
+    info->imports_start = mod_info.imports_start;
+    info->imports_end   = mod_info.imports_end;
 
-    STUBBED("Fake plant, NFS MW (JP), 1.00");
     return TAI_SUCCESS;
 }
 
@@ -192,15 +194,16 @@ EXPORT(int, taiHookRelease, SceUID tai_uid, tai_hook_ref_t hook)
     return TAI_ERROR_NOT_IMPLEMENTED;
 }
 
-EXPORT(SceUID, taiInjectAbs, void *dest, const void *src, SceSize size)
+EXPORT(SceUID, taiInjectAbs, Ptr<void> dest, const void *src, SceSize size)
 {
-    memcpy(dest, src, size);
+    memcpy(dest.get(emuenv.mem), src, size);
     STUBBED("Call memcpy");
     return 1;
 }
 
 EXPORT(SceUID, taiInjectDataForUser, /*in*/ tai_offset_args_t *args)
 {
+    const std::lock_guard lock(emuenv.kernel.mutex);
     SceUID modid = args->modid;
     int segidx = args->segidx;
     uint32_t offset = args->offset;
