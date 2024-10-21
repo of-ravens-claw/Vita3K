@@ -90,6 +90,7 @@ EXPORT(SceUID, sceKernelAllocMemBlock, const char *pName, SceKernelMemBlockType 
         return RET_ERROR(SCE_KERNEL_ERROR_INVALID_ARGUMENT);
     }
 
+    // TODO: Add CommonDialog memory here.
     int min_alignment;
     switch (type) {
     case SCE_KERNEL_MEMBLOCK_TYPE_USER_RX:
@@ -134,7 +135,9 @@ EXPORT(SceUID, sceKernelAllocMemBlock, const char *pName, SceKernelMemBlockType 
         break;
     default:
         // technically should be 0x81000000 but it shouldn't make a difference
-        start_address = 0x80000000U;
+        // 2024-10-20: changed to 0x81000000 so the main module
+        // (the game, usually) will be at the same address as on the vita.
+        start_address = 0x81000000U;
         break;
     }
 
