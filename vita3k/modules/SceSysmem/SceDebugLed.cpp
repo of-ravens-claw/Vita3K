@@ -25,10 +25,17 @@ EXPORT(int, sceDebugLedInvokeHandle1) {
     return UNIMPLEMENTED();
 }
 
-EXPORT(int, sceKernelGetGPI) {
-    return UNIMPLEMENTED();
+// TODO: Display these somewhere...
+SceUInt32 g_DebugGPI = 0; // I think all of this is used? It's located in Debug Settings
+SceUInt32 g_DebugGPO = 0; // Only the lower 8 bits are used
+
+EXPORT(SceUInt32, sceKernelGetGPI) {
+    printf("sceKernelGetGPI - %x\n", g_DebugGPI);
+    return g_DebugGPI;
 }
 
-EXPORT(int, sceKernelSetGPO) {
-    return UNIMPLEMENTED();
+EXPORT(int, sceKernelSetGPO, SceUInt32 gpo) {
+    printf("sceKernelSetGPO(%d) - %x\n", gpo, g_DebugGPO);
+    g_DebugGPO = gpo;
+    return 0;
 }
