@@ -7655,3 +7655,37 @@ NID(sceWlanGetWakeOnTargetProcess, 0x18E6AFB2)
 NID(sceWlanRegisterCallback, 0xAA2E46F6)
 NID(sceWlanSetConfiguration, 0xDBE8AEF2)
 NID(sceWlanUnregisterCallback, 0x826DC04F)
+
+// Module "kubridge"
+// Library "kubridge"
+NID(kuKernelAllocMemBlock, 0x2EF7C290)
+NID(kuKernelFlushCaches, 0x38B70744)
+NID(kuKernelCpuUnrestrictedMemcpy, 0x91D9CABC)
+NID(kuPowerGetSysClockFrequency, 0x13371337)
+NID(kuPowerSetSysClockFrequency, 0x13371338)
+NID(kuKernelMemProtect, 0x566d2af1)
+NID(kuKernelMemReserve, 0xced3608c)
+NID(kuKernelMemCommit, 0x9c0cd758)
+NID(kuKernelMemDecommit, 0x9bdf5881)
+NID(kuKernelRegisterExceptionHandler, 0xf9025d19)
+NID(kuKernelReleaseExceptionHandler, 0xdf9f3bed)
+// These two are deprecated
+NID(kuKernelRegisterAbortHandler, 0x799f5648)
+NID(kuKernelReleaseAbortHandler, 0xb188292d)
+
+// Module "taihen"
+// Library "taihen"
+NID(taiHookFunctionExportForUser, 0x8746A1CE)
+NID(taiHookFunctionImportForUser, 0x53636E5D)
+NID(taiHookFunctionOffsetForUser, 0x0535225A)
+NID(taiGetModuleInfo, 0xA5899384)
+NID(taiHookRelease, 0x1C30E799)
+NID(taiInjectAbs, 0x4A588904)
+NID(taiInjectDataForUser, 0xCE25B9BC)
+NID(taiInjectRelease, 0x21A4C8A6)
+NID(taiGetModuleExportFunc, 0x6231AAD1)
+// Not going to bother with the "taihenUnsafe" library,
+// it's mostly related to starting kernel modules via user mode,
+// and Vita3k doesn't run the PSP2 kernel.
+//
+// All the other libraries are kernel-only, and thus we don't need them.

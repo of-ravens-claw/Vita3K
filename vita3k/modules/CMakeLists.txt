@@ -207,10 +207,14 @@ set(SOURCE_LIST
 	SceVshBridge/SceDrmBridge.cpp
 	SceVshBridge/SceVshBridge.cpp
 	SceWlanBt/SceWlan.cpp
+	
+	# Custom modules
+	kubridge/kubridge.cpp
+	taihen/taihen.cpp
 )
 
 add_library(modules STATIC ${SOURCE_LIST})
 target_include_directories(modules PUBLIC include)
-target_link_libraries(modules PRIVATE audio codec ctrl dialog display dlmalloc gui gxm kernel mem motion net ngs np ssl packages printf renderer rtc sdl2 touch xxHash::xxhash)
+target_link_libraries(modules PRIVATE audio codec cppcommon ctrl dialog display dlmalloc gui gxm kernel mem motion net ngs np ssl packages printf renderer rtc sdl2 touch xxHash::xxhash)
 target_link_libraries(modules PUBLIC module)
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCE_LIST})
