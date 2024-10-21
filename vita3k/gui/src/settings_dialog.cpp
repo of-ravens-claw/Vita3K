@@ -831,12 +831,12 @@ void draw_settings_dialog(GuiState &gui, EmuEnvState &emuenv) {
         ImGui::Spacing();
         ImGui::Checkbox(lang.system["pstv_mode"].c_str(), &config.pstv_mode);
         SetTooltipEx(lang.system["pstv_mode_description"].c_str());
-        ImGui::SameLine();
-        ImGui::Checkbox(lang.system["show_mode"].c_str(), &emuenv.cfg.show_mode);
-        SetTooltipEx(lang.system["show_mode_description"].c_str());
-        ImGui::SameLine();
-        ImGui::Checkbox(lang.system["demo_mode"].c_str(), &emuenv.cfg.demo_mode);
-        SetTooltipEx(lang.system["demo_mode_description"].c_str());
+        // ImGui::SameLine();
+        // ImGui::Checkbox(lang.system["show_mode"].c_str(), &emuenv.cfg.show_mode);
+        // SetTooltipEx(lang.system["show_mode_description"].c_str());
+        // ImGui::SameLine();
+        // ImGui::Checkbox(lang.system["demo_mode"].c_str(), &emuenv.cfg.demo_mode);
+        // SetTooltipEx(lang.system["demo_mode_description"].c_str());
         ImGui::EndTabItem();
     } else
         ImGui::PopStyleColor();
@@ -954,8 +954,8 @@ void draw_settings_dialog(GuiState &gui, EmuEnvState &emuenv) {
         const std::string system_lang_name = fmt::format("{}: {}", lang.system["title"], get_sys_lang_name(emuenv.cfg.sys_lang));
         std::vector<const char *> list_user_lang_str{ system_lang_name.c_str() };
         static std::map<std::string, std::string> static_list_user_lang_names = {
-            { "id", "Indonesia" },
-            { "ms", "Malaysia" },
+            { "id", "Bahasa Indonesia" },
+            { "ms", "Malay" },
             { "ua", reinterpret_cast<const char *>(u8"Українська") },
         };
         for (const auto &l : list_user_lang)
