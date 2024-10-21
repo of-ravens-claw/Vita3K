@@ -225,9 +225,26 @@ EXPORT(int, sceCtrlSetButtonRemappingInfo) {
     return UNIMPLEMENTED();
 }
 
-EXPORT(int, sceCtrlSetLightBar) {
-    TRACY_FUNC(sceCtrlSetLightBar);
-    return UNIMPLEMENTED();
+EXPORT(int, sceCtrlSetLightBar, int port, SceUInt8 r, SceUInt8 g, SceUInt8 b)
+{
+    TRACY_FUNC(sceCtrlSetLightBar, port, r, g, b);
+    if (!emuenv.cfg.current_config.pstv_mode)
+        return RET_ERROR(SCE_CTRL_ERROR_NOT_SUPPORTED);
+
+    CtrlState &state = emuenv.ctrl;
+    for (const auto &controller : state.controllers) 
+    {
+        if (controller.second.port == port)
+        {
+            // should we return an error here?
+            if (SDL_GameControllerHasLED(controller.second.controller.get()))
+                SDL_GameControllerSetLED(controller.second.controller.get(), r, g, b);
+            
+            return 0;
+        }
+    }
+
+    return RET_ERROR(SCE_CTRL_ERROR_NO_DEVICE);
 }
 
 EXPORT(int, sceCtrlSetRapidFire) {
