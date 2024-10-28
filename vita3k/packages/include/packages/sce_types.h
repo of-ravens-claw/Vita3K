@@ -651,6 +651,7 @@ public:
 };
 
 void register_keys(KeyStore &SCE_KEYS, int type);
+void extract_exfat(const fs::path &partition_path, const std::string &partition, const fs::path &pref_path);
 void extract_fat(const fs::path &partition_path, const std::string &partition, const fs::path &pref_path);
 std::string decompress_segments(const std::vector<uint8_t> &decrypted_data, const uint64_t &size);
 std::tuple<uint64_t, SelfType> get_key_type(std::ifstream &file, const SceHeader &sce_hdr);
