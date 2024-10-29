@@ -17,20 +17,22 @@
 
 #include <module/module.h>
 
+#include "SceGxm.h"
+
 EXPORT(int, sceGxmCheckMemoryInternal) {
     return UNIMPLEMENTED();
 }
 
-EXPORT(int, sceGxmCreateRenderTargetInternal) {
-    return UNIMPLEMENTED();
+EXPORT(int, sceGxmCreateRenderTargetInternal, const SceGxmRenderTargetParams *params, Ptr<SceGxmRenderTarget> *renderTarget) {
+    return CALL_EXPORT(sceGxmCreateRenderTarget, params, renderTarget);
 }
 
 EXPORT(int, sceGxmGetDisplayQueueThreadIdInternal) {
     return UNIMPLEMENTED();
 }
 
-EXPORT(int, sceGxmGetRenderTargetMemSizeInternal) {
-    return UNIMPLEMENTED();
+EXPORT(int, sceGxmGetRenderTargetMemSizeInternal, const SceGxmRenderTargetParams *params, uint32_t *hostMemSize) {
+    return CALL_EXPORT(sceGxmGetRenderTargetMemSize, params, hostMemSize);
 }
 
 EXPORT(int, sceGxmGetTopContextInternal) {
