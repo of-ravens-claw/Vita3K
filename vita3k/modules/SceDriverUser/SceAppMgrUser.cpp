@@ -246,8 +246,22 @@ EXPORT(int, sceAppMgrGetCurrentBgmState) {
     return UNIMPLEMENTED();
 }
 
-EXPORT(int, sceAppMgrGetCurrentBgmState2) {
+struct BgmState {
+    uint32_t unk_0;
+    uint32_t unk2;
+    int unk3;
+    int unk4;
+    int unk5;
+    int unk6;
+    int unk7;
+    int unk8;
+};
+
+EXPORT(int, sceAppMgrGetCurrentBgmState2, BgmState *state) {
     TRACY_FUNC(sceAppMgrGetCurrentBgmState2);
+    memset(state, 0, sizeof(BgmState));
+    state->unk_0 = 130;
+    // state->unk2 = 130;
     return UNIMPLEMENTED();
 }
 

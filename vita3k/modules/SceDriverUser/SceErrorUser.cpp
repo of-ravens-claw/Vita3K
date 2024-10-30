@@ -17,8 +17,9 @@
 
 #include <module/module.h>
 
-EXPORT(int, sceErrorGetExternalString) {
-    return UNIMPLEMENTED();
+EXPORT(int, sceErrorGetExternalString, char *result, int err) {
+    sprintf(result, "0x%08X", err);
+    return 0;
 }
 
 EXPORT(int, sceErrorHistoryClearError) {

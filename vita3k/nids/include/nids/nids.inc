@@ -2063,6 +2063,10 @@ NID(_ZN4IPMI6Client7connectEPKvjPi, 0xA22C3E01)
 NID(_ZN4IPMI6Client7destroyEv, 0x101C93F8)
 NID(_ZN4IPMI6Client9tryGetMsgEjPvPmm, 0x60EFADE7)
 NID(_ZN4IPMI6ClientD1Ev, 0xA5AA193C)
+NID(SceIpmi_296D44D4, 0x296D44D4)
+NID(SceIpmi_BC3A3031, 0xBC3A3031)
+NID(SceIpmi_2C6DB642, 0x2C6DB642)
+NID(SceIpmi_006EFA9D, 0x006EFA9D)
 // Module "SceIncomingDialog"
 // Library "SceIncomingDialog"
 NID(sceIncomingDialogClose, 0x126BD15E)
