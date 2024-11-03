@@ -90,20 +90,23 @@ EXPORT(SceUID, sceKernelAllocMemBlock, const char *pName, SceKernelMemBlockType 
         return RET_ERROR(SCE_KERNEL_ERROR_INVALID_ARGUMENT);
     }
 
-    // TODO: Add CommonDialog memory here.
     int min_alignment;
     switch (type) {
     case SCE_KERNEL_MEMBLOCK_TYPE_USER_RX:
     case SCE_KERNEL_MEMBLOCK_TYPE_USER_RW:
     case SCE_KERNEL_MEMBLOCK_TYPE_USER_RW_UNCACHE:
-        min_alignment = 0x1000;
+        min_alignment = 0x1000; // 4 kb
         break;
     case SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW:
-        min_alignment = 0x40000;
+        min_alignment = 0x40000; // 256 kb
         break;
     case SCE_KERNEL_MEMBLOCK_TYPE_USER_MAIN_PHYCONT_RW:
     case SCE_KERNEL_MEMBLOCK_TYPE_USER_MAIN_PHYCONT_NC_RW:
-        min_alignment = 0x100000;
+        min_alignment = 0x100000; // 1 mb
+        break;
+    case SCE_KERNEL_MEMBLOCK_TYPE_USER_CDIALOG_RW:
+    case SCE_KERNEL_MEMBLOCK_TYPE_USER_CDIALOG_NC_RW:
+        min_alignment = 0x400; // 1 kb (unsure)
         break;
     default:
         return RET_ERROR(SCE_KERNEL_ERROR_INVALID_ARGUMENT);
@@ -133,10 +136,14 @@ EXPORT(SceUID, sceKernelAllocMemBlock, const char *pName, SceKernelMemBlockType 
     case SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW:
         start_address = 0x60000000U;
         break;
+    case SCE_KERNEL_MEMBLOCK_TYPE_USER_CDIALOG_RW:
+    case SCE_KERNEL_MEMBLOCK_TYPE_USER_CDIALOG_NC_RW:
+        start_address = 0x68000000U;
+        break;
     default:
-        // technically should be 0x81000000 but it shouldn't make a difference
+        // technically should be 0x81000000, but it shouldn't make a difference
         // 2024-10-20: changed to 0x81000000 so the main module
-        // (the game, usually) will be at the same address as on the vita.
+        // (the game) will be at the same address as on the vita. (assuming no aslr)
         start_address = 0x81000000U;
         break;
     }
