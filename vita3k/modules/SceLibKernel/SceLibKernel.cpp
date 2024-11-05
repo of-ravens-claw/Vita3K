@@ -381,7 +381,7 @@ EXPORT(int, sceClibStrlcpyChk) {
 
 EXPORT(int, sceClibStrncasecmp, const char *s1, const char *s2, SceSize len) {
     TRACY_FUNC(sceClibStrncasecmp, s1, s2, len);
-#ifdef WIN32
+#ifdef _WIN32
     return _strnicmp(s1, s2, len);
 #else
     return strncasecmp(s1, s2, len);
@@ -1304,7 +1304,7 @@ EXPORT(SceInt32, sceKernelGetCondInfo, SceUID condId, Ptr<SceKernelCondInfo> pIn
 
 EXPORT(int, sceKernelGetCurrentThreadVfpException) {
     TRACY_FUNC(sceKernelGetCurrentThreadVfpException);
-    return UNIMPLEMENTED();
+    return emuenv.kernel.get_thread(thread_id)->tls.get_ptr<int>().get(emuenv.mem)[TLS_VFP_EXCEPTION];
 }
 
 EXPORT(SceInt32, sceKernelGetEventFlagInfo, SceUID evfId, Ptr<SceKernelEventFlagInfo> pInfo) {
