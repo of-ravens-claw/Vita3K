@@ -485,13 +485,12 @@ void draw_settings_dialog(GuiState &gui, EmuEnvState &emuenv) {
     ImGui::PushStyleColor(ImGuiCol_Text, GUI_COLOR_TEXT_MENUBAR);
     ImGui::SetNextWindowPos(ImVec2(emuenv.viewport_pos.x + (display_size.x / 2.f), emuenv.viewport_pos.y + (display_size.y / 2.f)), ImGuiCond_Always, ImVec2(0.5f, 0.48f));
     const auto is_custom_config = gui.configuration_menu.custom_settings_dialog;
-    auto &settings_dialog = is_custom_config ? gui.configuration_menu.custom_settings_dialog : gui.configuration_menu.settings_dialog;
-    ImGui::Begin("##settings", &settings_dialog, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
+    // Reference here is intentional
+    auto &show_settings_dialog = is_custom_config ? gui.configuration_menu.custom_settings_dialog : gui.configuration_menu.settings_dialog;
+    ImGui::Begin("##settings", &show_settings_dialog, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
     ImGui::SetWindowFontScale(0.7f * RES_SCALE.x);
-    auto settings_str = lang.main_window["title"].c_str();
-    const auto title = is_custom_config ? fmt::format("{}: {} [{}]", settings_str, get_app_index(gui, emuenv.app_path)->title, emuenv.app_path) : settings_str;
-    ImGui::SetCursorPosX((ImGui::GetWindowSize().x / 2.f) - (ImGui::CalcTextSize(title.c_str()).x / 2.f));
-    ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%s", title.c_str());
+    const auto settings_str = lang.main_window["title"];
+    TextColoredCentered(GUI_COLOR_TEXT_TITLE, (is_custom_config ? fmt::format("{}: {} [{}]", settings_str, get_app_index(gui, emuenv.app_path)->title, emuenv.app_path) : settings_str).c_str());
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::BeginTabBar("SettingsTabBar", ImGuiTabBarFlags_None);
@@ -503,12 +502,14 @@ void draw_settings_dialog(GuiState &gui, EmuEnvState &emuenv) {
         if (!gui.modules.empty()) {
             ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%s", lang.core["modules_mode"].c_str());
             ImGui::Spacing();
-            for (auto m = 0; m < MODULES_MODE_COUNT; m++) {
-                if (m)
-                    ImGui::SameLine();
-                ImGui::RadioButton(config_modules_mode[m][ModulesModeType::MODE], &config.modules_mode, m);
-                SetTooltipEx(config_modules_mode[m][ModulesModeType::DESCRIPTION]);
-            }
+            ImGui::RadioButton(lang.core["automatic"].c_str(), &config.modules_mode, 0);
+            SetTooltipEx(lang.core["automatic_description"].c_str());
+            ImGui::SameLine();
+            ImGui::RadioButton(lang.core["auto_manual"].c_str(), &config.modules_mode, 1);
+            SetTooltipEx(lang.core["auto_manual_description"].c_str());
+            ImGui::SameLine();
+            ImGui::RadioButton(lang.core["manual"].c_str(), &config.modules_mode, 2);
+            SetTooltipEx(lang.core["manual_description"].c_str());
             ImGui::Spacing();
             ImGui::Separator();
             ImGui::Spacing();
@@ -667,8 +668,7 @@ void draw_settings_dialog(GuiState &gui, EmuEnvState &emuenv) {
         ImGui::Spacing();
 
         // Resolution Upscaling
-        ImGui::SetCursorPosX((ImGui::GetWindowWidth() / 2.f) - (ImGui::CalcTextSize(lang.gpu["internal_resolution_upscaling"].c_str()).x / 2.f));
-        ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%s", lang.gpu["internal_resolution_upscaling"].c_str());
+        TextColoredCentered(GUI_COLOR_TEXT_TITLE, lang.gpu["internal_resolution_upscaling"].c_str());
         ImGui::Spacing();
         ImGui::PushID("Res scal");
         if (config.resolution_multiplier == 0.5f)
@@ -713,8 +713,7 @@ void draw_settings_dialog(GuiState &gui, EmuEnvState &emuenv) {
         ImGui::Spacing();
 
         // Anisotropic Filtering
-        ImGui::SetCursorPosX((ImGui::GetWindowWidth() / 2.f) - (ImGui::CalcTextSize(lang.gpu["anisotropic_filtering"].c_str()).x / 2.f));
-        ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%s", lang.gpu["anisotropic_filtering"].c_str());
+        TextColoredCentered(GUI_COLOR_TEXT_TITLE, lang.gpu["anisotropic_filtering"].c_str());
         ImGui::Spacing();
         ImGui::PushID("Aniso filter");
         if (config.anisotropic_filtering == 1)
@@ -752,8 +751,7 @@ void draw_settings_dialog(GuiState &gui, EmuEnvState &emuenv) {
         ImGui::Spacing();
 
         // Texture Replacement
-        ImGui::SetCursorPosX((ImGui::GetWindowWidth() / 2.f) - (ImGui::CalcTextSize(lang.gpu["texture_replacement"].c_str()).x / 2.f));
-        ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%s", lang.gpu["texture_replacement"].c_str());
+        TextColoredCentered(GUI_COLOR_TEXT_TITLE, lang.gpu["texture_replacement"].c_str());
         ImGui::Spacing();
         ImGui::Checkbox(lang.gpu["export_textures"].c_str(), &config.export_textures);
         ImGui::SameLine();
@@ -765,8 +763,7 @@ void draw_settings_dialog(GuiState &gui, EmuEnvState &emuenv) {
             config.export_as_png = export_format_pos == 0;
 
         // Shaders
-        ImGui::SetCursorPosX((ImGui::GetWindowWidth() / 2.f) - (ImGui::CalcTextSize(lang.gpu["shaders"].c_str()).x / 2.f));
-        ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%s", lang.gpu["shaders"].c_str());
+        TextColoredCentered(GUI_COLOR_TEXT_TITLE, lang.gpu["shaders"].c_str());
         ImGui::Spacing();
         ImGui::Checkbox(lang.gpu["shader_cache"].c_str(), &emuenv.cfg.shader_cache);
         SetTooltipEx(lang.gpu["shader_cache_description"].c_str());
@@ -849,7 +846,7 @@ void draw_settings_dialog(GuiState &gui, EmuEnvState &emuenv) {
         ImGui::Checkbox(lang.emulator["boot_apps_full_screen"].c_str(), &emuenv.cfg.boot_apps_full_screen);
         ImGui::Spacing();
 
-        const char *LIST_LOG_LEVEL[] = { lang.emulator["trace"].c_str(), "Debug", lang.emulator["info"].c_str(), lang.emulator["warning"].c_str(), lang.emulator["error"].c_str(), lang.emulator["critical"].c_str(), lang.emulator["off"].c_str() };
+        const char *LIST_LOG_LEVEL[] = { lang.emulator["trace"].c_str(), gui.lang.main_menubar.debug["title"].c_str(), lang.emulator["info"].c_str(), lang.emulator["warning"].c_str(), lang.emulator["error"].c_str(), lang.emulator["critical"].c_str(), lang.emulator["off"].c_str() };
         if (ImGui::Combo(lang.emulator["log_level"].c_str(), &emuenv.cfg.log_level, LIST_LOG_LEVEL, IM_ARRAYSIZE(LIST_LOG_LEVEL)))
             logging::set_level(static_cast<spdlog::level::level_enum>(emuenv.cfg.log_level));
         SetTooltipEx(lang.emulator["select_log_level"].c_str());
@@ -876,9 +873,7 @@ void draw_settings_dialog(GuiState &gui, EmuEnvState &emuenv) {
         ImGui::Checkbox(lang.emulator["check_for_updates"].c_str(), &emuenv.cfg.check_for_updates);
         SetTooltipEx(lang.emulator["check_for_updates_description"].c_str());
         ImGui::Separator();
-        const auto performance_overlay_size = ImGui::CalcTextSize(lang.emulator["performance_overlay"].c_str()).x;
-        ImGui::SetCursorPosX((ImGui::GetWindowWidth() / 2.f) - (performance_overlay_size / 2.f));
-        ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%s", lang.emulator["performance_overlay"].c_str());
+        TextColoredCentered(GUI_COLOR_TEXT_TITLE, lang.emulator["performance_overlay"].c_str());
         ImGui::Spacing();
         ImGui::Checkbox(lang.emulator["performance_overlay"].c_str(), &emuenv.cfg.performance_overlay);
         SetTooltipEx(lang.emulator["performance_overlay_description"].c_str());
@@ -896,8 +891,7 @@ void draw_settings_dialog(GuiState &gui, EmuEnvState &emuenv) {
         SetTooltipEx(lang.emulator["case_insensitive_description"].c_str());
 #endif
         ImGui::Separator();
-        ImGui::SetCursorPosX((ImGui::GetWindowWidth() / 2.f) - (ImGui::CalcTextSize(lang.emulator["emu_storage_folder"].c_str()).x / 2.f));
-        ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%s", lang.emulator["emu_storage_folder"].c_str());
+        TextColoredCentered(GUI_COLOR_TEXT_TITLE, lang.emulator["emu_storage_folder"].c_str());
         ImGui::Spacing();
         ImGui::PushItemWidth(320);
         ImGui::TextColored(GUI_COLOR_TEXT, "%s %s", lang.emulator["current_emu_path"].c_str(), emuenv.cfg.pref_path.c_str());
@@ -921,8 +915,7 @@ void draw_settings_dialog(GuiState &gui, EmuEnvState &emuenv) {
         }
         ImGui::Spacing();
         ImGui::Separator();
-        ImGui::SetCursorPosX((ImGui::GetWindowWidth() / 2.f) - (ImGui::CalcTextSize(lang.emulator["custom_config_settings"].c_str()).x / 2.f));
-        ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "%s", lang.emulator["custom_config_settings"].c_str());
+        TextColoredCentered(GUI_COLOR_TEXT_TITLE, lang.emulator["custom_config_settings"].c_str());
         ImGui::Spacing();
         if (ImGui::Button(lang.emulator["clear_custom_config"].c_str())) {
             if (fs::remove_all(emuenv.config_path / "config")) {
@@ -931,11 +924,10 @@ void draw_settings_dialog(GuiState &gui, EmuEnvState &emuenv) {
         }
         ImGui::Spacing();
         ImGui::Separator();
-        ImGui::SetCursorPosX((ImGui::GetWindowWidth() / 2.f) - (ImGui::CalcTextSize("screenshot image type").x / 2.f));
-        ImGui::TextColored(GUI_COLOR_TEXT_TITLE, "screenshot image type");
+        TextColoredCentered(GUI_COLOR_TEXT_TITLE, lang.emulator["screenshot_image_type"].c_str());
         ImGui::Spacing();
         const char *LIST_IMG_FORMAT[] = { "NULL", "JPEG", "PNG" };
-        ImGui::Combo("Screenshot format", &emuenv.cfg.screenshot_format, LIST_IMG_FORMAT, IM_ARRAYSIZE(LIST_IMG_FORMAT));
+        ImGui::Combo(lang.emulator["screenshot_format"].c_str(), &emuenv.cfg.screenshot_format, LIST_IMG_FORMAT, IM_ARRAYSIZE(LIST_IMG_FORMAT));
         ImGui::EndTabItem();
     } else
         ImGui::PopStyleColor();
@@ -992,9 +984,7 @@ void draw_settings_dialog(GuiState &gui, EmuEnvState &emuenv) {
         ImGui::Spacing();
         ImGui::Separator();
         ImGui::Spacing();
-        const auto font_size = ImGui::CalcTextSize(lang.gui["font_support"].c_str()).x;
-        ImGui::SetCursorPosX((ImGui::GetWindowWidth() / 2.f) - (font_size / 2.f));
-        ImGui::TextColored(GUI_COLOR_TEXT_MENUBAR, "%s", lang.gui["font_support"].c_str());
+        TextColoredCentered(GUI_COLOR_TEXT_MENUBAR, lang.gui["font_support"].c_str());
         ImGui::Spacing();
         if (gui.fw_font) {
             ImGui::Checkbox(lang.gui["asia_font_support"].c_str(), &emuenv.cfg.asia_font_support);
@@ -1008,9 +998,7 @@ void draw_settings_dialog(GuiState &gui, EmuEnvState &emuenv) {
         ImGui::Spacing();
         ImGui::Separator();
         ImGui::Spacing();
-        const auto title = ImGui::CalcTextSize(lang.gui["theme_background"].c_str()).x;
-        ImGui::SetCursorPosX((ImGui::GetWindowWidth() / 2.f) - (title / 2.f));
-        ImGui::TextColored(GUI_COLOR_TEXT_MENUBAR, "%s", lang.gui["theme_background"].c_str());
+        TextColoredCentered(GUI_COLOR_TEXT_MENUBAR, lang.gui["theme_background"].c_str());
         ImGui::Spacing();
         ImGui::TextColored(GUI_COLOR_TEXT, "%s %s", lang.gui["current_theme_content_id"].c_str(), gui.users[emuenv.io.user_id].theme_id.c_str());
         if (gui.users[emuenv.io.user_id].theme_id != "default") {
@@ -1078,9 +1066,7 @@ void draw_settings_dialog(GuiState &gui, EmuEnvState &emuenv) {
         ImGui::Spacing();
 
         // PSN
-        const auto psn = ImGui::CalcTextSize("PlayStation Network").x;
-        ImGui::SetCursorPosX((ImGui::GetWindowWidth() / 2.f) - (psn / 2.f));
-        ImGui::TextColored(GUI_COLOR_TEXT_MENUBAR, "PlayStation Network");
+        TextColoredCentered(GUI_COLOR_TEXT_MENUBAR, "PlayStation Network");
         ImGui::Spacing();
         ImGui::Checkbox(lang.network["psn_signed_in"].c_str(), &config.psn_signed_in);
         SetTooltipEx(lang.network["psn_signed_in_description"].c_str());
@@ -1089,9 +1075,7 @@ void draw_settings_dialog(GuiState &gui, EmuEnvState &emuenv) {
         ImGui::Spacing();
         ImGui::Separator();
         ImGui::Spacing();
-        const auto http = ImGui::CalcTextSize("HTTP").x;
-        ImGui::SetCursorPosX((ImGui::GetWindowWidth() / 2.f) - (http / 2.f));
-        ImGui::TextColored(GUI_COLOR_TEXT_MENUBAR, "HTTP");
+        TextColoredCentered(GUI_COLOR_TEXT_MENUBAR, "HTTP");
         ImGui::Spacing();
         ImGui::Checkbox(lang.network["enable_http"].c_str(), &emuenv.cfg.http_enable);
         SetTooltipEx(lang.network["enable_http_description"].c_str());
@@ -1113,7 +1097,7 @@ void draw_settings_dialog(GuiState &gui, EmuEnvState &emuenv) {
 
     // Debug
     ImGui::PushStyleColor(ImGuiCol_Text, GUI_COLOR_TEXT_MENUBAR);
-    if (ImGui::BeginTabItem("Debug")) {
+    if (ImGui::BeginTabItem(gui.lang.main_menubar.debug["title"].c_str())) {
         ImGui::PopStyleColor();
         ImGui::Spacing();
         ImGui::Checkbox(lang.debug["log_imports"].c_str(), &emuenv.kernel.debugger.log_imports);
@@ -1229,7 +1213,7 @@ void draw_settings_dialog(GuiState &gui, EmuEnvState &emuenv) {
     static const auto BUTTON_SIZE = ImVec2(120.f * SCALE.x, 0.f);
     ImGui::SetCursorPosX((ImGui::GetWindowSize().x / 2.f) - BUTTON_SIZE.x - (10.f * SCALE.x));
     if (ImGui::Button(common["close"].c_str(), BUTTON_SIZE))
-        settings_dialog = false;
+        show_settings_dialog = false;
     ImGui::SameLine(0, 20.f * SCALE.x);
     const auto is_apply = !emuenv.io.app_path.empty() && (!is_custom_config || (emuenv.app_path == emuenv.io.app_path));
     const auto is_reboot = (emuenv.renderer->current_backend != emuenv.backend_renderer) || (config.resolution_multiplier != emuenv.cfg.current_config.resolution_multiplier);
