@@ -40,16 +40,6 @@ std::string to_debug_str<SceKernelMemBlockType>(const MemState &mem, SceKernelMe
     return std::to_string(type);
 }
 
-struct SceKernelAllocMemBlockOpt {
-    SceSize size;
-    SceUInt32 attr;
-    SceSize alignment;
-    SceUInt32 uidBaseBlock;
-    const char *strBaseBlockName;
-    int flags;
-    int reserved[10];
-};
-
 struct SceKernelFreeMemorySizeInfo {
     int size; //!< sizeof(SceKernelFreeMemorySizeInfo)
     int size_user; //!< Free memory size for *_USER_RW memory
@@ -78,8 +68,6 @@ struct SysmemState {
 LIBRARY_INIT(SceSysmem) {
     emuenv.kernel.obj_store.create<SysmemState>();
 }
-
-constexpr SceUInt32 SCE_KERNEL_ALLOC_MEMBLOCK_ATTR_HAS_ALIGNMENT = 4;
 
 EXPORT(SceUID, sceKernelAllocMemBlock, const char *pName, SceKernelMemBlockType type, SceSize size, SceKernelAllocMemBlockOpt *optp) {
     TRACY_FUNC(sceKernelAllocMemBlock, pName, type, size, optp);

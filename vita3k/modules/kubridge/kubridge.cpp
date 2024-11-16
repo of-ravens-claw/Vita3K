@@ -5,6 +5,8 @@
 #include <cpu/functions.h>
 #include <util/lock_and_find.h>
 
+#include <modules/SceSysmem/SceSysmem.h>
+
 #pragma region kubridge structures and defines
 
 #define KU_KERNEL_PROT_NONE (0x00)
@@ -136,14 +138,27 @@ typedef struct KuKernelAbortHandlerOpt {
 EXPORT(SceUID, kuKernelAllocMemBlock, const char *name, SceKernelMemBlockType type,
     SceSize size, SceKernelAllocMemBlockKernelOpt *opt)
 {
-    return UNIMPLEMENTED();
+    STUBBED("forwarding to sceKernelAllocMemBlock");
+
+    // Convert from SceKernelAllocMemBlockKernelOpt to SceKernelAllocMemBlockOpt
+    // Not exhaustive, but should be good enough.
+    SceKernelAllocMemBlockOpt userOpt = { .size = sizeof(SceKernelAllocMemBlockOpt) };
+
+    // we do it this way to avoid unsupported attributes
+    if (opt->attr & SCE_KERNEL_ALLOC_MEMBLOCK_ATTR_HAS_ALIGNMENT && opt->alignment != 0)
+    {
+        userOpt.attr = 4; // HAS_ALIGNMENT
+        userOpt.alignment = opt->alignment;
+    }
+
+    return CALL_EXPORT(sceKernelAllocMemBlock, name, type, size, &userOpt);
 }
 
 EXPORT(void, kuKernelFlushCaches, Ptr<void> ptr, SceSize len)
 {
-    // We should probably do it for multiple threads, and not just the current one...
-    const ThreadStatePtr thread = lock_and_find(thread_id, emuenv.kernel.threads, emuenv.kernel.mutex);
-    invalidate_jit_cache(*(thread->cpu), ptr.address(), len);
+    const std::lock_guard lock(emuenv.kernel.mutex);
+    for (auto thread : emuenv.kernel.threads)
+        invalidate_jit_cache(*(thread.second->cpu), ptr.address(), len);
 }
 
 EXPORT(int, kuKernelCpuUnrestrictedMemcpy, Ptr<void> dst, const void *src, SceSize len)
