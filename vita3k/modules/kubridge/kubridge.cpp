@@ -20,7 +20,8 @@
 #define KU_KERNEL_EXCEPTION_TYPE_PREFETCH_ABORT 1
 #define KU_KERNEL_EXCEPTION_TYPE_UNDEFINED_INSTRUCTION 2
 
-typedef struct KuKernelExceptionContext {
+struct KuKernelExceptionContext
+{
     SceUInt32 r0;
     SceUInt32 r1;
     SceUInt32 r2;
@@ -44,120 +45,40 @@ typedef struct KuKernelExceptionContext {
     SceUInt32 FSR;
     SceUInt32 FAR;
     SceUInt32 exceptionType;
-} KuKernelExceptionContext;
+};
 
 typedef Ptr<void(Ptr<KuKernelExceptionContext> ctx)> KuKernelExceptionHandler;
 
-typedef struct KuKernelExceptionHandlerOpt {
+struct KuKernelExceptionHandlerOpt
+{
     SceSize size;
-} KuKernelExceptionHandlerOpt;
+};
 
-typedef struct KuKernelMemCommitOpt {
+ struct KuKernelMemCommitOpt
+{
     SceSize size;
     SceUInt32 attr;
     SceUID baseBlock;
     SceUInt32 baseOffset;
-} KuKernelMemCommitOpt;
-
-typedef struct SceKernelAddrPair {
-    uint32_t addr; //!< Address
-    uint32_t length; //!< Length
-} SceKernelAddrPair;
-
-typedef struct SceKernelPaddrList {
-    uint32_t size; //!< sizeof(SceKernelPaddrList)
-    uint32_t list_size; //!< Size in elements of the list array
-    uint32_t ret_length; //!< Total physical size of the memory pairs
-    uint32_t ret_count; //!< Number of elements of list filled by ksceKernelGetPaddrList
-    Ptr<SceKernelAddrPair> list; //!< Array of physical addresses and their lengths pairs
-} SceKernelPaddrList;
-
-typedef struct SceKernelAllocMemBlockKernelOpt {
-    SceSize size; //!< sizeof(SceKernelAllocMemBlockKernelOpt)
-    SceUInt32 field_4;
-    SceUInt32 attr; //!< OR of SceKernelAllocMemBlockAttr
-    SceUInt32 field_C;
-    SceUInt32 paddr;
-    SceSize alignment;
-    SceUInt32 extraLow;
-    SceUInt32 extraHigh;
-    SceUInt32 mirror_blockid;
-    SceUID pid;
-    Ptr<SceKernelPaddrList> paddr_list;
-    SceUInt32 field_2C;
-    SceUInt32 field_30;
-    SceUInt32 field_34;
-    SceUInt32 field_38;
-    SceUInt32 field_3C;
-    SceUInt32 field_40;
-    SceUInt32 field_44;
-    SceUInt32 field_48;
-    SceUInt32 field_4C;
-    SceUInt32 field_50;
-    SceUInt32 field_54;
-} SceKernelAllocMemBlockKernelOpt;
+};
 
 // Deprecated
-#define KU_KERNEL_ABORT_TYPE_DATA_ABORT 0
-#define KU_KERNEL_ABORT_TYPE_PREFETCH_ABORT 1
-
-typedef struct KuKernelAbortContext {
-    SceUInt32 r0;
-    SceUInt32 r1;
-    SceUInt32 r2;
-    SceUInt32 r3;
-    SceUInt32 r4;
-    SceUInt32 r5;
-    SceUInt32 r6;
-    SceUInt32 r7;
-    SceUInt32 r8;
-    SceUInt32 r9;
-    SceUInt32 r10;
-    SceUInt32 r11;
-    SceUInt32 r12;
-    SceUInt32 sp;
-    SceUInt32 lr;
-    SceUInt32 pc;
-    SceUInt64 vfpRegisters[32];
-    SceUInt32 SPSR;
-    SceUInt32 FPSCR;
-    SceUInt32 FPEXC;
-    SceUInt32 FSR;
-    SceUInt32 FAR;
-    SceUInt32 abortType;
-} KuKernelAbortContext;
-
-typedef Ptr<void(Ptr<KuKernelAbortContext> ctx)> KuKernelAbortHandler;
-
-typedef struct KuKernelAbortHandlerOpt {
-    SceSize size; //!< Size of structure
-} KuKernelAbortHandlerOpt;
+typedef KuKernelExceptionContext KuKernelAbortContext;
+typedef struct KuKernelAbortHandlerOpt KuKernelAbortHandlerOpt;
+typedef KuKernelExceptionHandler KuKernelAbortHandler;
 
 #pragma endregion
 
-EXPORT(SceUID, kuKernelAllocMemBlock, const char *name, SceKernelMemBlockType type,
-    SceSize size, SceKernelAllocMemBlockKernelOpt *opt)
+// The actual implementation lies in SceSysmem.cpp
+EXPORT(SceUID, kuKernelAllocMemBlock, const char* name, SceKernelMemBlockType type, SceSize vsize, SceKernelAllocMemBlockOptKernel* pOpt)
 {
-    STUBBED("forwarding to sceKernelAllocMemBlock");
-
-    // Convert from SceKernelAllocMemBlockKernelOpt to SceKernelAllocMemBlockOpt
-    // Not exhaustive, but should be good enough.
-    SceKernelAllocMemBlockOpt userOpt = { .size = sizeof(SceKernelAllocMemBlockOpt) };
-
-    // we do it this way to avoid unsupported attributes
-    if (opt->attr & SCE_KERNEL_ALLOC_MEMBLOCK_ATTR_HAS_ALIGNMENT && opt->alignment != 0)
-    {
-        userOpt.attr = 4; // HAS_ALIGNMENT
-        userOpt.alignment = opt->alignment;
-    }
-
-    return CALL_EXPORT(sceKernelAllocMemBlock, name, type, size, &userOpt);
+    return CALL_EXPORT(sceKernelAllocMemBlockForDriver, name, type, vsize, pOpt);
 }
 
 EXPORT(void, kuKernelFlushCaches, Ptr<void> ptr, SceSize len)
 {
     const std::lock_guard lock(emuenv.kernel.mutex);
-    for (auto thread : emuenv.kernel.threads)
+    for (const auto& thread : emuenv.kernel.threads)
         invalidate_jit_cache(*(thread.second->cpu), ptr.address(), len);
 }
 
@@ -179,6 +100,7 @@ EXPORT(int, kuPowerSetSysClockFrequency, int freq)
     return STUBBED("doing nothing");
 }
 
+// Vita3K doesn't really support memory protection so we ignore these.
 EXPORT(int, kuKernelMemProtect, Ptr<void> addr, SceSize len, SceUInt32 prot)
 {
     return UNIMPLEMENTED();

@@ -412,7 +412,9 @@ enum SceEventFlagWaitTypes {
     SCE_EVENT_WAITCLEAR_PAT = 4
 };
 
-enum SceKernelMemBlockType {
+// There's a lot more
+enum SceKernelMemBlockType : SceUInt32
+{
     SCE_KERNEL_MEMBLOCK_TYPE_USER_RW_UNCACHE = 0x0C208060,
     SCE_KERNEL_MEMBLOCK_TYPE_USER_RX = 0x0C20D050,
     SCE_KERNEL_MEMBLOCK_TYPE_USER_RW = 0x0C20D060,

@@ -80,7 +80,7 @@ EXPORT(SceUID, sceKernelAllocMemBlock, const char *pName, SceKernelMemBlockType 
 
     int min_alignment;
     switch (type) {
-    case SCE_KERNEL_MEMBLOCK_TYPE_USER_RX:
+    case SCE_KERNEL_MEMBLOCK_TYPE_USER_RX: // probably shouldn't be here
     case SCE_KERNEL_MEMBLOCK_TYPE_USER_RW:
     case SCE_KERNEL_MEMBLOCK_TYPE_USER_RW_UNCACHE:
         min_alignment = 0x1000; // 4 kb
@@ -153,6 +153,110 @@ EXPORT(SceUID, sceKernelAllocMemBlock, const char *pName, SceKernelMemBlockType 
     sceKernelMemBlock->mappedSize = size;
     sceKernelMemBlock->size = sizeof(SceKernelMemBlockInfo);
     std::strncpy(sceKernelMemBlock->name, pName, KERNELOBJECT_MAX_NAME_LENGTH);
+    state->blocks.emplace(uid, sceKernelMemBlock);
+
+    return uid;
+}
+
+// TODO: Make sure this matches
+// NOTE: Not a real export, only called by kuKernelAllocMemBlock
+DECL_EXPORT(SceUID, sceKernelAllocMemBlockForDriver, const char *name, SceKernelMemBlockType type, SceSize vsize, SceKernelAllocMemBlockOptKernel *pOpt) {
+    TRACY_FUNC(sceKernelAllocMemBlockForDriver, name, type, vsize, pOpt);
+    MemState &mem = emuenv.mem;
+    assert(type != 0);
+
+    if (!name || !vsize)
+        return RET_ERROR(SCE_KERNEL_ERROR_INVALID_ARGUMENT);
+
+    int min_alignment;
+    switch (type)
+    {
+    case SCE_KERNEL_MEMBLOCK_TYPE_USER_RX:
+    case SCE_KERNEL_MEMBLOCK_TYPE_USER_RW:
+    case SCE_KERNEL_MEMBLOCK_TYPE_USER_RW_UNCACHE:
+        min_alignment = 0x1000; // 4 kb
+        break;
+
+    case SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW:
+        min_alignment = 0x40000; // 256 kb
+        break;
+
+    case SCE_KERNEL_MEMBLOCK_TYPE_USER_MAIN_PHYCONT_RW:
+    case SCE_KERNEL_MEMBLOCK_TYPE_USER_MAIN_PHYCONT_NC_RW:
+        min_alignment = 0x100000; // 1 mb
+        break;
+
+    case SCE_KERNEL_MEMBLOCK_TYPE_USER_CDIALOG_RW:
+    case SCE_KERNEL_MEMBLOCK_TYPE_USER_CDIALOG_NC_RW:
+        min_alignment = 0x400; // 1 kb (unsure)
+        break;
+
+    default:
+        return RET_ERROR(SCE_KERNEL_ERROR_INVALID_ARGUMENT);
+    }
+
+    // size should be a multiple of min_alignment
+    SceSize alignment = min_alignment;
+    if (pOpt && (pOpt->attr & SCE_KERNEL_ALLOC_MEMBLOCK_ATTR_HAS_ALIGNMENT)) 
+    {
+        // alignment must be a power of 2
+        if (pOpt->alignment & (pOpt->alignment - 1))
+            return RET_ERROR(SCE_KERNEL_ERROR_INVALID_ARGUMENT);
+
+        alignment = std::max(alignment, pOpt->alignment);
+    }
+
+    // x & -x returns the lsb of x
+    alignment = std::max(alignment, vsize & -vsize);
+
+    Address start_address;
+    switch (type)
+    {
+    case SCE_KERNEL_MEMBLOCK_TYPE_USER_RW_UNCACHE:
+    case SCE_KERNEL_MEMBLOCK_TYPE_USER_MAIN_PHYCONT_NC_RW:
+        start_address = 0x70000000U;
+        break;
+
+    case SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW:
+        start_address = 0x60000000U;
+        break;
+
+    case SCE_KERNEL_MEMBLOCK_TYPE_USER_CDIALOG_RW:
+    case SCE_KERNEL_MEMBLOCK_TYPE_USER_CDIALOG_NC_RW:
+        start_address = 0x68000000U;
+        break;
+
+    default:
+        start_address = 0x81000000U;
+        break;
+    }
+
+    // NOTE: Not perfect, but it should be good enough.
+    Address requested_address = start_address;
+    if (pOpt && (pOpt->attr & SCE_KERNEL_ALLOC_MEMBLOCK_ATTR_HAS_VBASE))
+    {
+        if (pOpt->vbase.address() == NULL) // Don't know if this is a real check...
+            return RET_ERROR(SCE_KERNEL_ERROR_INVALID_ARGUMENT);
+
+        requested_address = pOpt->vbase.address();
+    }
+
+    const auto state = emuenv.kernel.obj_store.get<SysmemState>();
+    const auto guard = std::lock_guard(state->mutex);
+
+    Ptr<void> address = Ptr<void>(alloc_aligned(mem, vsize, name, alignment, requested_address));
+
+    if (!address)
+        return RET_ERROR(SCE_KERNEL_ERROR_NO_MEMORY);
+
+    const SceUID uid = state->get_next_uid();
+
+    const KernelMemBlockPtr sceKernelMemBlock = std::make_shared<KernelMemBlock>();
+    sceKernelMemBlock->type = type;
+    sceKernelMemBlock->mappedBase = address;
+    sceKernelMemBlock->mappedSize = vsize;
+    sceKernelMemBlock->size = sizeof(SceKernelMemBlockInfo);
+    std::strncpy(sceKernelMemBlock->name, name, KERNELOBJECT_MAX_NAME_LENGTH);
     state->blocks.emplace(uid, sceKernelMemBlock);
 
     return uid;

@@ -139,6 +139,8 @@ SceKernelModuleInfo *get_sce_module_info_from_uid(EmuEnvState &emuenv, SceUID mo
     return &get_v3k_module_info_from_uid(emuenv, modid)->info;
 }
 
+SceUID g_tai_next_uid = 1; // this is terrible, but alas.
+
 EXPORT(SceUID, taiHookFunctionExportForUser, /*out*/ tai_hook_ref_t *p_hook, /*in*/ tai_hook_args_t *args)
 {
     UNIMPLEMENTED();
@@ -190,15 +192,17 @@ EXPORT(int, taiGetModuleInfo, const char *module_name, /*in*/ tai_module_info_t 
 
 EXPORT(int, taiHookRelease, SceUID tai_uid, tai_hook_ref_t hook)
 {
-    UNIMPLEMENTED();
-    return TAI_ERROR_NOT_IMPLEMENTED;
+    // probably doesn't do anything
+    tai_uid = SCE_UID_INVALID_UID;
+    hook = 0;
+    return STUBBED("do nothing");
 }
 
 EXPORT(SceUID, taiInjectAbs, Ptr<void> dest, const void *src, SceSize size)
 {
     memcpy(dest.get(emuenv.mem), src, size);
     STUBBED("Call memcpy");
-    return 1;
+    return g_tai_next_uid++;
 }
 
 EXPORT(SceUID, taiInjectDataForUser, /*in*/ tai_offset_args_t *args)
@@ -219,13 +223,14 @@ EXPORT(SceUID, taiInjectDataForUser, /*in*/ tai_offset_args_t *args)
     memcpy(ptr.get(emuenv.mem), data.get(emuenv.mem), size);
 
     STUBBED("Doesn't support releasing hooks");
-    return 1; // a lot of people use checks like `if (hook_uid >= 0) taiHookRelease(hook_ref)`, please them.
+    return g_tai_next_uid++; // a lot of people use checks like `if (hook_uid >= 0) taiHookRelease(hook_ref)`, please them.
 }
 
 EXPORT(int, taiInjectRelease, SceUID tai_uid)
 {
-    UNIMPLEMENTED();
-    return TAI_ERROR_NOT_IMPLEMENTED;
+    // probably doesn't do anything
+    tai_uid = SCE_UID_INVALID_UID;
+    return STUBBED("do nothing");
 }
 
 EXPORT(int, taiGetModuleExportFunc, /*in*/ const char *modname, 
