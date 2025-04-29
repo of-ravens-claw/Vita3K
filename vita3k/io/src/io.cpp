@@ -1,5 +1,5 @@
 // Vita3K emulator project
-// Copyright (C) 2024 Vita3K team
+// Copyright (C) 2025 Vita3K team
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -66,15 +66,7 @@ namespace vfs {
 
 bool read_file(const VitaIoDevice device, FileBuffer &buf, const fs::path &pref_path, const fs::path &vfs_file_path) {
     const auto host_file_path = device::construct_emulated_path(device, vfs_file_path, pref_path).generic_path();
-
-    fs::ifstream f{ host_file_path, fs::ifstream::binary };
-    if (!f)
-        return false;
-
-    f.unsetf(fs::ifstream::skipws);
-    buf.reserve(fs::file_size(host_file_path));
-    buf.insert(buf.begin(), std::istream_iterator<uint8_t>(f), std::istream_iterator<uint8_t>());
-    return true;
+    return fs_utils::read_data(host_file_path, buf);
 }
 
 bool read_app_file(FileBuffer &buf, const fs::path &pref_path, const std::string &app_path, const fs::path &vfs_file_path) {
@@ -257,7 +249,9 @@ std::string translate_path(const char *path, VitaIoDevice &device, const IOState
         break;
     }
     case +VitaIoDevice::tty0:
-    case +VitaIoDevice::tty1: {
+    case +VitaIoDevice::tty1:
+    case +VitaIoDevice::tty2:
+    case +VitaIoDevice::tty3: {
         return std::string{};
     }
     default: {
@@ -291,7 +285,7 @@ SceUID open_file(IOState &io, const char *path, const int flags, const fs::path 
         return IO_ERROR(SCE_ERROR_ERRNO_ENOENT);
     }
 
-    if (device == VitaIoDevice::tty0 || device == VitaIoDevice::tty1) {
+    if ((device == VitaIoDevice::tty0) || (device == VitaIoDevice::tty1) || (device == VitaIoDevice::tty2) || (device == VitaIoDevice::tty3)) {
         assert(flags >= 0);
 
         auto tty_type = TTY_UNKNOWN;

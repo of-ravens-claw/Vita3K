@@ -1,5 +1,5 @@
 // Vita3K emulator project
-// Copyright (C) 2024 Vita3K team
+// Copyright (C) 2025 Vita3K team
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -82,13 +82,15 @@ std::string get_device_string(const VitaIoDevice dev, const bool with_colon) {
 bool is_valid_output_path(const VitaIoDevice device) {
     return !(device == VitaIoDevice::savedata0 || device == VitaIoDevice::savedata1 || device == VitaIoDevice::app0
         || device == VitaIoDevice::_INVALID || device == VitaIoDevice::addcont0 || device == VitaIoDevice::tty0
-        || device == VitaIoDevice::tty1 || device == VitaIoDevice::music0 || device == VitaIoDevice::photo0 || device == VitaIoDevice::video0);
+        || device == VitaIoDevice::tty1 || device == VitaIoDevice::tty2 || device == VitaIoDevice::tty3
+        || device == VitaIoDevice::music0 || device == VitaIoDevice::photo0 || device == VitaIoDevice::video0);
 }
 
 bool is_valid_output_path(const std::string &device) {
     return !(device == (+VitaIoDevice::savedata0)._to_string() || device == (+VitaIoDevice::savedata1)._to_string() || device == (+VitaIoDevice::app0)._to_string()
         || device == (+VitaIoDevice::_INVALID)._to_string() || device == (+VitaIoDevice::addcont0)._to_string() || device == (+VitaIoDevice::tty0)._to_string()
-        || device == (+VitaIoDevice::tty1)._to_string() || device == (+VitaIoDevice::music0)._to_string() || device == (+VitaIoDevice::photo0)._to_string() || device == (+VitaIoDevice::video0)._to_string());
+        || device == (+VitaIoDevice::tty1)._to_string() || device == (+VitaIoDevice::tty2)._to_string() || device == (+VitaIoDevice::tty3)._to_string()
+        || device == (+VitaIoDevice::music0)._to_string() || device == (+VitaIoDevice::photo0)._to_string() || device == (+VitaIoDevice::video0)._to_string());
 }
 
 std::string remove_duplicate_device(const std::string &path, VitaIoDevice &device) {

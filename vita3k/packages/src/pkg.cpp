@@ -1,5 +1,5 @@
 // Vita3K emulator project
-// Copyright (C) 2024 Vita3K team
+// Copyright (C) 2025 Vita3K team
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@
 #include <config/state.h>
 #include <emuenv/state.h>
 #include <packages/functions.h>
+#include <packages/license.h>
 #include <packages/pkg.h>
 #include <packages/sce_types.h>
 #include <packages/sfo.h>
@@ -48,7 +49,7 @@ static void ctr_init(uint8_t *counter, uint8_t *iv, uint64_t n) {
     }
 }
 
-int execute(std::string &zrif, fs::path &title_src, fs::path &title_dst, F00DEncryptorTypes type, std::string &f00d_arg) {
+static int execute(std::string &zrif, fs::path &title_src, fs::path &title_dst, F00DEncryptorTypes type, std::string &f00d_arg) {
     std::string title_src_str = title_src.string();
     std::string title_dst_str = title_dst.string();
     return execute(zrif, title_src_str, title_dst_str, type, f00d_arg);
@@ -70,17 +71,6 @@ bool decrypt_install_nonpdrm(EmuEnvState &emuenv, const fs::path &drmlicpath, co
 
     fs::remove_all(title_id_src);
     fs::rename(title_id_dst, title_id_src);
-
-    KeyStore SCE_KEYS;
-    register_keys(SCE_KEYS, 1);
-    std::vector<uint8_t> temp_klicensee = get_temp_klicensee(zRIF);
-
-    for (const auto &file : fs::recursive_directory_iterator(title_id_src)) {
-        if (is_self(file.path())) {
-            decrypt_fself(file.path(), SCE_KEYS, temp_klicensee.data());
-            LOG_INFO("Decrypted {} with klicensee {}", file.path(), byte_array_to_string(temp_klicensee.data(), 16));
-        }
-    }
 
     return true;
 }
@@ -200,7 +190,7 @@ bool install_pkg(const fs::path &pkg_path, EmuEnvState &emuenv, std::string &p_z
     std::vector<uint8_t> sfo_buffer(sfo_size);
     SfoFile sfo_file;
     infile.seekg(sfo_offset);
-    infile.read((char *)&sfo_buffer[0], sfo_size);
+    infile.read((char *)sfo_buffer.data(), sfo_size);
     sfo::load(sfo_file, sfo_buffer);
     sfo::get_param_info(emuenv.app_info, sfo_buffer, emuenv.cfg.sys_lang);
 
@@ -323,12 +313,6 @@ bool install_pkg(const fs::path &pkg_path, EmuEnvState &emuenv, std::string &p_z
         fs::remove_all(title_id_src);
         fs::rename(title_id_dst, title_id_src);
 
-        for (const auto &file : fs::recursive_directory_iterator(title_id_src)) {
-            if (is_self(file.path())) {
-                decrypt_fself(file.path(), SCE_KEYS, temp_klicensee.data());
-                LOG_INFO("Decrypted {} with klicensee {}", file.path(), byte_array_to_string(temp_klicensee.data(), 16));
-            }
-        }
         break;
     case PkgType::PKG_TYPE_VITA_DLC:
 
@@ -355,6 +339,7 @@ bool install_pkg(const fs::path &pkg_path, EmuEnvState &emuenv, std::string &p_z
         return false;
 
     create_license(emuenv, zRIF);
+
     progress_callback(100);
     return true;
 }

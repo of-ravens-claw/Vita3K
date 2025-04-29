@@ -1,5 +1,5 @@
 // Vita3K emulator project
-// Copyright (C) 2024 Vita3K team
+// Copyright (C) 2025 Vita3K team
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -141,7 +141,9 @@ public:
         bool export_as_png = false;
         bool fps_hack = false;
         bool stretch_the_display_area = false;
+        bool fullscreen_hd_res_pixel_perfect = false;
         bool show_touchpad_cursor = true;
+        int file_loading_delay = 0;
         bool psn_signed_in = false;
     };
 

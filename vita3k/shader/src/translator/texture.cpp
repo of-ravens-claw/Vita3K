@@ -1,6 +1,6 @@
 
 // Vita3K emulator project
-// Copyright (C) 2024 Vita3K team
+// Copyright (C) 2025 Vita3K team
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -129,13 +129,23 @@ spv::Id shader::usse::USSETranslatorVisitor::do_fetch_texture(const spv::Id tex,
             op = spv::OpImageSampleImplicitLod;
     } else {
         op = spv::OpImageSampleExplicitLod;
-        if (lod_mode == 2) {
+        switch (lod_mode) {
+        case 1:
+            op = spv::OpImageSampleImplicitLod;
+            params.push_back(spv::ImageOperandsBiasMask);
+            params.push_back(extra1);
+            break;
+        case 2:
             params.push_back(spv::ImageOperandsLodMask);
             params.push_back(extra1);
-        } else if (lod_mode == 3) {
+            break;
+        case 3:
             params.push_back(spv::ImageOperandsGradMask);
             params.push_back(extra1);
             params.push_back(extra2);
+            break;
+        default:
+            break;
         }
     }
 
@@ -201,12 +211,6 @@ bool USSETranslatorVisitor::smp(
     Imm7 src0_n,
     Imm7 src1_n,
     Imm7 src2_n) {
-    // LOD mode: none, bias, replace, gradient
-    if ((lod_mode != 0) && (lod_mode != 2) && (lod_mode != 3)) {
-        LOG_ERROR("Sampler LOD replace not implemented!");
-        return true;
-    }
-
     // Decode src0
     Instruction inst;
     inst.opr.src0 = decode_src0(inst.opr.src0, src0_n, src0_bank, src0_ext, true, 8, m_second_program);
@@ -337,11 +341,13 @@ bool USSETranslatorVisitor::smp(
         // ddy
         spv::Id extra2 = spv::NoResult;
 
+        // LOD mode: none, bias, replace, gradient
         if (lod_mode != 0) {
             inst.opr.src2 = decode_src12(inst.opr.src2, src2_n, src2_bank, src2_ext, true, 8, m_second_program);
             inst.opr.src2.type = inst.opr.src0.type;
 
             switch (lod_mode) {
+            case 1:
             case 2:
                 extra1 = load(inst.opr.src2, 0b1);
                 break;
@@ -418,6 +424,7 @@ bool USSETranslatorVisitor::smp(
             // sb_mode = 1 or 3 : gather 4 (+ uv if sb_mode = 3)
             // first gather all components
             std::vector<spv::Id> g4_comps;
+            g4_comps.reserve(sampler.component_count);
             for (int comp = 0; comp < sampler.component_count; comp++) {
                 g4_comps.push_back(do_fetch_texture(image_sampler, sampler.index, dim, { coords, static_cast<int>(DataType::F32) }, inst.opr.dest.type, lod_mode, extra1, extra2, comp));
             }

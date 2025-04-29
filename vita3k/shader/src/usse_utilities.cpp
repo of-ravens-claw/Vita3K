@@ -1,5 +1,5 @@
 // Vita3K emulator project
-// Copyright (C) 2024 Vita3K team
+// Copyright (C) 2025 Vita3K team
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -685,7 +685,7 @@ spv::Id unpack_one(spv::Builder &b, SpirvUtilFunctions &utils, const FeatureStat
         return b.createFunctionCall(utils.unpack_fx10, { scalar });
     }
     default: {
-        LOG_ERROR("Unsupported unpack type: {}", log_hex(type));
+        LOG_ERROR("Unsupported unpack type: 0x{:0X}", fmt::underlying(type));
         break;
     }
     }
@@ -714,7 +714,7 @@ spv::Id pack_one(spv::Builder &b, SpirvUtilFunctions &utils, const FeatureState 
     }
 
     default: {
-        LOG_ERROR("Unsupported pack type: {}", log_hex(fmt::underlying(source_type)));
+        LOG_ERROR("Unsupported pack type: 0x{:0X}", fmt::underlying(source_type));
         break;
     }
     }
@@ -1448,10 +1448,7 @@ static spv::Id create_constant_vector_or_scalar(spv::Builder &b, spv::Id constan
     if (comp_count == 1) {
         return constant;
     }
-    std::vector<spv::Id> oprs;
-    for (int i = 0; i < comp_count; ++i) {
-        oprs.push_back(constant);
-    }
+    std::vector<spv::Id> oprs(comp_count, constant);
     return b.createCompositeConstruct(b.makeVectorType(b.getTypeId(constant), comp_count), oprs);
 }
 

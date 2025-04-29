@@ -1,5 +1,5 @@
 // Vita3K emulator project
-// Copyright (C) 2024 Vita3K team
+// Copyright (C) 2025 Vita3K team
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -33,8 +33,6 @@ void draw_firmware_install_dialog(GuiState &gui, EmuEnvState &emuenv) {
     static bool delete_pup_file;
     static std::filesystem::path pup_path = "";
 
-    host::dialog::filesystem::Result result = host::dialog::filesystem::Result::CANCEL;
-
     static std::mutex install_mutex;
     static bool draw_file_dialog = true;
     static bool finished_installing = false;
@@ -47,32 +45,24 @@ void draw_firmware_install_dialog(GuiState &gui, EmuEnvState &emuenv) {
     auto &lang = gui.lang.install_dialog.firmware_install;
     auto &common = emuenv.common_dialog.lang.common;
 
-    const ImVec2 display_size(emuenv.viewport_size.x, emuenv.viewport_size.y);
-    const ImVec2 RES_SCALE(display_size.x / emuenv.res_width_dpi_scale, display_size.y / emuenv.res_height_dpi_scale);
-    const ImVec2 SCALE(RES_SCALE.x * emuenv.dpi_scale, RES_SCALE.y * emuenv.dpi_scale);
+    const ImVec2 display_size(emuenv.logical_viewport_size.x, emuenv.logical_viewport_size.y);
+    const ImVec2 RES_SCALE(emuenv.gui_scale.x, emuenv.gui_scale.y);
+    const ImVec2 SCALE(RES_SCALE.x * emuenv.manual_dpi_scale, RES_SCALE.y * emuenv.manual_dpi_scale);
     const ImVec2 WINDOW_SIZE(616.f * SCALE.x, 264.f * SCALE.y);
     const ImVec2 BUTTON_SIZE(160.f * SCALE.x, 45.f * SCALE.y);
 
-    ImGui::SetNextWindowPos(ImVec2(emuenv.viewport_pos.x + (display_size.x / 2.f) - (WINDOW_SIZE.x / 2), emuenv.viewport_pos.y + (display_size.y / 2.f) - (WINDOW_SIZE.y / 2.f)), ImGuiCond_Always);
+    ImGui::SetNextWindowPos(ImVec2(emuenv.logical_viewport_pos.x + (display_size.x / 2.f) - (WINDOW_SIZE.x / 2), emuenv.logical_viewport_pos.y + (display_size.y / 2.f) - (WINDOW_SIZE.y / 2.f)), ImGuiCond_Always);
     ImGui::SetNextWindowSize(WINDOW_SIZE);
     if (draw_file_dialog) {
-        result = host::dialog::filesystem::open_file(pup_path, { { "PlayStation Vita Firmware Package", { "PUP" } } });
+        auto result = host::dialog::filesystem::open_file(pup_path, { { "PlayStation Vita Firmware Package", { "PUP" } } });
         draw_file_dialog = false;
         finished_installing = false;
 
         if (result == host::dialog::filesystem::Result::SUCCESS) {
             std::thread installation([&emuenv]() {
-                install_pup(emuenv.pref_path, fs::path(pup_path.native()), progress_callback);
+                fw_version = install_pup(emuenv.pref_path, fs::path(pup_path.native()), progress_callback);
                 std::lock_guard<std::mutex> lock(install_mutex);
                 finished_installing = true;
-                // get firmware version
-                fs::ifstream versionFile(emuenv.pref_path / "PUP_DEC/PUP/version.txt");
-                if (versionFile.is_open()) {
-                    std::getline(versionFile, fw_version);
-                    versionFile.close();
-                } else
-                    LOG_WARN("Firmware Version file not found!");
-                fs::remove_all(emuenv.pref_path / "PUP_DEC");
             });
             installation.detach();
         } else if (result == host::dialog::filesystem::Result::CANCEL) {
@@ -121,7 +111,7 @@ void draw_firmware_install_dialog(GuiState &gui, EmuEnvState &emuenv) {
             const auto fw_font_package{ emuenv.pref_path / "sa0" };
             if (!fs::exists(fw_font_package) || fs::is_empty(fw_font_package)) {
                 ImGui::TextColored(GUI_COLOR_TEXT, "%s", lang["no_font_exist"].c_str());
-                if (ImGui::Button(lang["download_firmware_font_package"].c_str()))
+                if (ImGui::Button(gui.lang.welcome["download_firmware_font_package"].c_str()))
                     open_path("https://bit.ly/2P2rb0r");
                 SetTooltipEx(lang["firmware_font_package_description"].c_str());
                 ImGui::Spacing();

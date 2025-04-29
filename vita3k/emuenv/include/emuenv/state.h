@@ -1,5 +1,5 @@
 // Vita3K emulator project
-// Copyright (C) 2024 Vita3K team
+// Copyright (C) 2025 Vita3K team
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -54,6 +54,7 @@ struct NpState;
 struct DisplayState;
 struct DialogState;
 struct Ime;
+struct License;
 struct RegMgrState;
 struct SfoFile;
 struct GDBState;
@@ -98,6 +99,7 @@ private:
     std::unique_ptr<DisplayState> _display;
     std::unique_ptr<DialogState> _common_dialog;
     std::unique_ptr<Ime> _ime;
+    std::unique_ptr<License> _license;
     std::unique_ptr<RegMgrState> _regmgr;
     std::unique_ptr<SfoFile> _sfo_handle;
     std::unique_ptr<GDBState> _gdb;
@@ -107,7 +109,6 @@ public:
     // App info contained in its `param.sfo` file
     sfo::SfoAppInfo &app_info;
     std::string app_path{};
-    int32_t app_sku_flag{};
     std::string license_content_id{};
     std::string license_title_id{};
     std::string current_app_title{};
@@ -142,8 +143,12 @@ public:
     renderer::Backend backend_renderer{};
     RendererPtr renderer{};
     IVector2 drawable_size = { 0, 0 };
-    FVector2 viewport_pos = { 0, 0 };
-    FVector2 viewport_size = { 0, 0 };
+    IVector2 window_size = { 0, 0 }; // Logical size of the window
+    FVector2 logical_viewport_pos = { 0, 0 }; // Position of the logical viewport in the window. For ImGui
+    FVector2 logical_viewport_size = { 0, 0 }; // Size of the logical viewport in the window. For ImGui
+    FVector2 drawable_viewport_pos = { 0, 0 }; // Position of the drawable viewport in the window. For OpenGL/Vulkan
+    FVector2 drawable_viewport_size = { 0, 0 }; // Size of the drawable viewport in the window. For OpenGL/Vulkan
+    bool drop_inputs{};
     MemState &mem;
     CtrlState &ctrl;
     TouchState &touch;
@@ -160,14 +165,17 @@ public:
     DisplayState &display;
     DialogState &common_dialog;
     Ime &ime;
+    License &license;
     RegMgrState &regmgr;
     SfoFile &sfo_handle;
     NIDSet missing_nids;
-    float dpi_scale = 1.f;
-    uint32_t res_width_dpi_scale = 0;
-    uint32_t res_height_dpi_scale = 0;
+    float system_dpi_scale = 1.f;
+    float manual_dpi_scale = 1.f;
+    FVector2 gui_scale = { 1.f, 1.f };
     GDBState &gdb;
     HTTPState &http;
+    int max_font_level = 0;
+    int current_font_level = 0;
 
     EmuEnvState();
     // declaring a destructor is necessary to forward declare unique_ptrs
